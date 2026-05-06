@@ -68,3 +68,22 @@ def add_zscore_feature(
         )
 
     return result
+
+
+def latest_zscore(
+    series: pd.Series,
+    window: int = 100,
+    ddof: int = 0,
+) -> float:
+    """Return the z-score of the latest value in a rolling window."""
+    clean = pd.Series(series).replace([np.inf, -np.inf], np.nan).dropna()
+    if window <= 1:
+        raise ValueError("window must be greater than 1.")
+    if len(clean) < window:
+        raise ValueError(f"Need at least {window} samples; got {len(clean)}.")
+
+    sample = clean.tail(window)
+    std = sample.std(ddof=ddof)
+    if std == 0 or np.isnan(std):
+        return np.nan
+    return float((sample.iloc[-1] - sample.mean()) / std)
